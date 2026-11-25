@@ -1,8 +1,8 @@
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from app.db import db, rows_to_list, row_to_dict
-from app.services.common import audit, now_str
+from app.db import db, write_db, rows_to_list, row_to_dict
+from app.services.common import SCALE_HELD_WHERE, audit, now_str
 
 router = APIRouter(tags=["班次"])
 
@@ -26,7 +26,7 @@ def list_shifts():
 
 @router.post("/班次")
 def create_shift(body: ShiftIn):
-    with db() as conn:
+    with write_db() as conn:
         open_one = conn.execute("SELECT id FROM shifts WHERE status='未落印'").fetchone()
         if open_one:
             raise HTTPException(400, "仍有未落印班次，先落印再开新班")
@@ -47,17 +47,15 @@ def create_shift(body: ShiftIn):
 
 @router.post("/班次/{shift_id}/落印")
 def stamp_shift(shift_id: int):
-    with db() as conn:
+    with write_db() as conn:
         shift = conn.execute("SELECT * FROM shifts WHERE id=?", (shift_id,)).fetchone()
         if not shift:
             raise HTTPException(404, "班次不存在")
         if shift["status"] == "已落印":
             raise HTTPException(400, "已落印")
+        # 班次边界闸门：在制磅单（待定级/待结价，含缺品级）未清不得落印，口径与占秤同源
         pending = conn.execute(
-            """
-            SELECT COUNT(*) AS c FROM tickets
-            WHERE shift_id=? AND status IN ('待定级','待结价')
-            """,
+            f"SELECT COUNT(*) AS c FROM tickets WHERE shift_id=? AND {SCALE_HELD_WHERE}",
             (shift_id,),
         ).fetchone()["c"]
         if pending:

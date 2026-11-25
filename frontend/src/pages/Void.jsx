@@ -25,11 +25,12 @@ export default function Void() {
       {err && <div className="err">{err}</div>}
       <div className="table-wrap">
         <table>
-          <thead><tr><th>磅条号</th><th>回收点</th><th>地磅</th><th>状态</th><th>净重</th><th>操作</th></tr></thead>
+          <thead><tr><th>磅条号</th><th>回收点</th><th>地磅</th><th>状态</th><th>净重</th><th>品级事实</th><th>操作</th></tr></thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.编号}>
+              <tr key={r.编号} className={r.缺品级 ? 'row-missing' : ''}>
                 <td>{r.磅条号}</td><td>{r.回收点}</td><td>{r.地磅}</td><td>{r.状态}</td><td>{r.净重}</td>
+                <td>{r.缺品级 ? <span className="badge">缺品级</span> : <span className="badge ok">已带</span>}</td>
                 <td><button type="button" onClick={() => cancel(r.编号)}>销单</button></td>
               </tr>
             ))}

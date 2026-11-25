@@ -1,7 +1,7 @@
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from app.db import db, rows_to_list, row_to_dict
+from app.db import db, write_db, rows_to_list, row_to_dict
 from app.services.common import audit
 
 router = APIRouter(tags=["回收点"])
@@ -36,7 +36,7 @@ def list_sites():
 
 @router.post("/回收点")
 def create_site(body: SiteIn):
-    with db() as conn:
+    with write_db() as conn:
         try:
             conn.execute(
                 "INSERT INTO sites(name, status, address) VALUES (?, '营业中', ?)",
@@ -53,7 +53,7 @@ def create_site(body: SiteIn):
 def set_site_status(site_id: int, body: StatusIn):
     if body.状态 not in SITE_STATUS:
         raise HTTPException(400, "状态仅允许营业中、停收或已注销")
-    with db() as conn:
+    with write_db() as conn:
         cur = conn.execute("UPDATE sites SET status=? WHERE id=?", (body.状态, site_id))
         if cur.rowcount == 0:
             raise HTTPException(404, "回收点不存在")

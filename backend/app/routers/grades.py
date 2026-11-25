@@ -1,7 +1,7 @@
 from __future__ import annotations
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from app.db import db, rows_to_list, row_to_dict
+from app.db import db, write_db, rows_to_list, row_to_dict
 from app.services.common import audit
 
 router = APIRouter(tags=["品级"])
@@ -26,7 +26,7 @@ def list_grades():
 
 @router.post("/品级")
 def save_grade(body: GradeIn):
-    with db() as conn:
+    with write_db() as conn:
         exist = conn.execute(
             "SELECT id FROM grades WHERE category=? AND grade_name=?",
             (body.品类, body.品级名),

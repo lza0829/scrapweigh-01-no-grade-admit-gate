@@ -1,7 +1,7 @@
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from app.db import db, rows_to_list, row_to_dict
+from app.db import db, write_db, rows_to_list, row_to_dict
 from app.services.common import audit
 
 router = APIRouter(tags=["地磅"])
@@ -35,7 +35,7 @@ def list_scales():
 
 @router.post("/地磅")
 def create_scale(body: ScaleIn):
-    with db() as conn:
+    with write_db() as conn:
         site = conn.execute("SELECT * FROM sites WHERE id=?", (body.回收点编号,)).fetchone()
         if not site:
             raise HTTPException(404, "回收点不存在")
@@ -60,7 +60,7 @@ def create_scale(body: ScaleIn):
 def set_scale_status(scale_id: int, body: StatusIn):
     if body.状态 not in ("空闲", "故障"):
         raise HTTPException(400, "只能改为空闲或故障")
-    with db() as conn:
+    with write_db() as conn:
         row = conn.execute("SELECT * FROM scales WHERE id=?", (scale_id,)).fetchone()
         if not row:
             raise HTTPException(404, "地磅不存在")

@@ -125,3 +125,31 @@ td button + button { margin-left: 0.35rem; }
 .msg { margin: 0.5rem 0; color: var(--ok); }
 .err { margin: 0.5rem 0; color: var(--danger); }
 .muted { color: #6d6458; font-size: 0.86rem; }
+
+/* 缺品级事实与告警：全系统同一视觉口径，不得静默 */
+.warn {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--rust);
+  background: #f3e2d3;
+  color: var(--rust-deep);
+  font-size: 0.9rem;
+}
+.warn ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.78rem;
+  border: 1px solid var(--rust);
+  color: var(--rust-deep);
+  background: #f6e7da;
+  white-space: nowrap;
+}
+.badge.ok {
+  border-color: var(--ok);
+  color: var(--ok);
+  background: #e2efe7;
+}
+tr.row-missing td { background: #f8ece2; }
+.stat.stat-missing { border-top-color: var(--danger); }
+.stat.stat-missing .n { color: var(--danger); }

@@ -20,16 +20,22 @@ export default function Settle() {
       <h2>结价</h2>
       {msg && <div className="msg">{msg}</div>}
       {err && <div className="err">{err}</div>}
+      <p className="muted">可结价口径：待结价且已定级锁价。缺品级磅单不会出现在此，亦不得被假装可计价。</p>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>磅条号</th><th>地磅</th><th>品级</th><th>净重</th><th>锁价</th><th>应付</th><th>操作</th></tr></thead>
+          <thead><tr><th>磅条号</th><th>地磅</th><th>品级</th><th>缺品级</th><th>净重</th><th>锁价</th><th>应付</th><th>操作</th></tr></thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.编号}>
+              <tr key={r.编号} className={r.缺品级 ? 'row-missing' : ''}>
                 <td>{r.磅条号}</td><td>{r.地磅}</td><td>{r.品类}{r.品级}</td>
+                <td>{r.缺品级 ? <span className="badge">缺品级</span> : <span className="badge ok">已带</span>}</td>
                 <td>{r.净重}</td><td>{r.锁价}</td>
                 <td>{r.锁价 != null ? (Number(r.净重) * Number(r.锁价)).toFixed(2) : '-'}</td>
-                <td><button type="button" onClick={() => settle(r.编号)}>结价</button></td>
+                <td>
+                  {r.可结价
+                    ? <button type="button" onClick={() => settle(r.编号)}>结价</button>
+                    : <button type="button" disabled title="未定级或未锁价，不可结价">不可结价</button>}
+                </td>
               </tr>
             ))}
           </tbody>

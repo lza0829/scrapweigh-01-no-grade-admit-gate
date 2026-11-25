@@ -79,16 +79,39 @@ SHIFT_STATUSES = ("未落印", "已落印")
 
 def connect() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys=ON")
+    # 写竞争时等待而非立刻抛 database is locked，配合 BEGIN IMMEDIATE 串行化写事务
+    conn.execute("PRAGMA busy_timeout=30000")
     return conn
 
 
 @contextmanager
 def db():
+    """读事务：延迟开事务，纯读不拿写锁。"""
     conn = connect()
     try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+@contextmanager
+def write_db():
+    """写事务：立即拿 RESERVED 锁，并发写在此排队，由 SQLite 串行化。
+
+    同一秤位并发双入站时，后到事务在 BEGIN IMMEDIATE 处等待，先到提交后
+    后到的条件 UPDATE（WHERE status='空闲'）rowcount=0，干净 400 拒绝；
+    事务内任何一步抛错都整体回滚到过磅前快照，不留半截脏写。
+    """
+    conn = connect()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
         yield conn
         conn.commit()
     except Exception:

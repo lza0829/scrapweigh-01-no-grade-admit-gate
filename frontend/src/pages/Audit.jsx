@@ -15,7 +15,7 @@ export default function Audit() {
         <thead><tr><th>时间</th><th>类别</th><th>动作</th><th>关联</th><th>备注</th></tr></thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.编号}>
+            <tr key={r.编号} className={String(r.动作).includes('拒收') ? 'row-missing' : ''}>
               <td>{r.时间}</td><td>{r.类别}</td><td>{r.动作}</td><td>{r.关联 ?? '-'}</td><td>{r.备注 || '-'}</td>
             </tr>
           ))}
